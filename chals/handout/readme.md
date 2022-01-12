@@ -1,25 +1,49 @@
 # handout
 
+**This challenge will only work remote because it requires a very specific 
+filesystem setup that I don't feel like emulating right now**
+
+## Tags
+
+- x86-64
+- seccomp
+- stack buffer overflow
+- idekctf2021
+
+## Intro
+
 A challenge from idekctf2021. This is a binary that uses `seccomp` to filter
-allowed syscalls. This particular binary also `chroot`'s to a directory in tmp
-(most likely to prevent writing to files that get executed). We will need to
-analyze the sandbox environment to determine what is possible.
+allowed syscalls. This particular binary also `chroot`'s to a directory in tmp (most likely to prevent writing to files that get executed). We will need to analyze the sandbox environment to determine what is possible.
 
 ## Analysis
 
-First we need to determine what protections we are dealing with.
+First we need to determine what protections we are dealing with. We will use `checksec` for this.
+
+    $ checksec rocket
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX disabled
+    PIE:      No PIE (0x400000)
+    RWX:      Has RWX segments
+
+This is an `x86-64` ELF binary with seemingly no protections enabled. Let's use `ghidra` to examine the binary. The bug is very obvious
+
+    printf("Here is a gift for your journey:%p\n",local_828);
+    gets(local_828);
+    install_syscall_filter();
+
+This is a stack buffer overflow with `seccomp` filters enabled.
 
 ## Solution
 
-First we need to determine which syscalls we are allowed to execute. To do this
-we can use [seccomp-tools](https://github.com/david942j/seccomp-tools). Run
+First we need to determine which syscalls we are allowed to execute. To do this we can use [seccomp-tools](https://github.com/david942j/seccomp-tools). Run
 
-    seccomp-tools dump ./rocket
+    $ seccomp-tools dump ./rocket
 
-Provide input so that the `seccomp` filters are submitted. The results look
-like
+Provide input so that the `seccomp` filters are submitted. The results look like
 
-    seccomp-tools dump ./rocket
+    $ seccomp-tools dump ./rocket
     Creating a jail at `/tmp/ccRUAB`.
     Here is a gift for your journey:0x7ffcfdb72c00
     hello world
@@ -56,11 +80,7 @@ We can only use the following syscalls
     fcntl
 
 A look at the binary in `ghidra` shows that it opens the `/tmp` directory
-before calling `chroot` and never closes the `fd`. We can use our shellcode to
-call `openat` and open the flag file. Additonally the program opens several
-random file descriptors. To overcome this we will have our shellcode loop over
-every possible fd ad attempt to open the flag file. When the `openat` call
-succeeds we break the loop. Here is our shellcode
+before calling `chroot` and never closes the `fd`. We can use our shellcode to call `openat` and open the flag file. Additonally the program opens several random file descriptors. To overcome this we will have our shellcode loop over every possible fd and attempt to open the flag file. When the `openat` call succeeds we break the loop. Here is our shellcode
 
         xor rdi, rdi     # get rdi to 3 initially
         inc rdi
@@ -91,3 +111,5 @@ succeeds we break the loop. Here is our shellcode
 
     flag:
         .ascii "../flag.txt"
+
+To execute our shellcode we will write our shellcode first and then overwrite the return address on the stack with the address of our shellcode.
