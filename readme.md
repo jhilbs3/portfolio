@@ -10,6 +10,11 @@ complete list of my work**. A lot of the challenges I have completed are active
 on `hackthebox` (I am not allowed to publish those writeups until the 
 challenges are archived). For a complete portfolio please send me a message.
 
+## sbof.ko
+
+Check out my 
+[series on kernel module development and exploitation](https://github.com/jhilbs3/portfolio/tree/main/chals/sbof.ko).
+
 ## Vulnerability Classes
 
 ### Type Confusion
