@@ -13,9 +13,22 @@ challenges are archived). For a complete portfolio please send me a message.
 ## sbof.ko
 
 Check out my 
-[series on kernel module development and exploitation](https://github.com/jhilbs3/portfolio/tree/main/chals/sbof.ko).
+[series on kernel module development and exploitation](https://joe-hilbert.gitbook.io/public-portfolio/content/sbof.ko).
 
 ## Vulnerability Classes
+
+### Heap Buffer Overflow
+
+##### [Dream Diaries: Chapter 1](chals/dream_diary_chapter_1/readme.md)
+
+    Arch: x86_64
+    Security Measures
+        - aslr
+        - NX
+        - stack canary
+    Other tags
+        - hackthebox
+        - pwnc
 
 ### Type Confusion
 
